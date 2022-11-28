@@ -26,12 +26,12 @@ INSTANTIATE_TEST_SUITE_P(
     KeyValidation,
     ValidFormatTestSuite,
     testing::Values(
-        "key = value",
-        " key      =  value   ",
-        " key=  value",
-        " key123 =  value",
-        " key_1-23-abcd =  value",
-        " 23key_ =  value"
+        "key = \"value\"",
+        " key      =  \"value\"   ",
+        " key=  \"value\"",
+        " key123 =  \"value\"",
+        " key_1-23-abcd =  \"value\"",
+        " 23key_ =  \"value\""
     )
 );
 
@@ -39,14 +39,14 @@ INSTANTIATE_TEST_SUITE_P(
     KeyValidation,
     InvalidFormatTestSuite,
     testing::Values(
-        "!key = value",
-        "key = \nvalue",
-        "      =  value   ",
-        "=  value",
-        " key**123 =  value",
-        " . =  value",
-        " .key2.key3 =  value",
-        " key1. =  value"
+        "!key = \"value\"",
+        "key = \n\"value\"",
+        "      =  \"value\"   ",
+        "=  \"value\"",
+        " key**123 =  \"value\"",
+        " . =  \"value\"",
+        " .key2.key3 =  \"value\"",
+        " key1. =  \"value\""
     )
 );
 

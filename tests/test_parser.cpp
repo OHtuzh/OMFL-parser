@@ -103,8 +103,8 @@ TEST(ParserTestSuite, StringTest) {
 
     ASSERT_TRUE(root.valid());
 
+    ASSERT_TRUE(root.Get("key").IsString());
     ASSERT_TRUE(root.Get("key1").IsString());
-    ASSERT_TRUE(root.Get("key2").IsString());
 
     ASSERT_EQ(root.Get("key").AsString(), "value");
     ASSERT_EQ(root.Get("key1").AsString(), "value1");
@@ -120,8 +120,8 @@ TEST(ParserTestSuite, InvalidStringTest) {
 
     ASSERT_TRUE(root.valid());
 
+    ASSERT_FALSE(root.Get("key").IsString());
     ASSERT_FALSE(root.Get("key1").IsString());
-    ASSERT_FALSE(root.Get("key2").IsString());
 
     ASSERT_EQ(root.Get("key").AsStringOrDefault("Hello"), "Hello");
     ASSERT_EQ(root.Get("key1").AsStringOrDefault("World"), "World");
@@ -234,6 +234,5 @@ TEST(ParserTestSuite, GetSectionTest) {
     const auto root = parse(data);
     ASSERT_TRUE(root.valid());
 
-    AS
-    SERT_EQ(root.Get("level1").Get("level2").Get("level3").AsInt(), 1);
+    ASSERT_EQ(root.Get("level1").Get("level2").Get("level3").Get("key1").AsInt(), 1);
 }
