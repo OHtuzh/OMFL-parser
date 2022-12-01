@@ -209,10 +209,10 @@ INSTANTIATE_TEST_SUITE_P(
     SectionValueValidation,
     InvalidFormatTestSuite,
     testing::Values(
-        "key1 = []",
-        "key2 = {section-1}",
-        "key3 = [section-1.]",
-        "key4 = [.section-1]"
+        "[]",
+        "{section-1}",
+        "[section-1.]",
+        "[.section-1]"
     )
 );
 
