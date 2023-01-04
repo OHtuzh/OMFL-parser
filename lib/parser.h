@@ -1,14 +1,15 @@
 #pragma once
 
+#include "variables/Root.h"
+
+
 #include <filesystem>
 #include <istream>
 
-
 namespace omfl {
 
-class __NameMe__;
-__NameMe__ parse(const std::filesystem::path& path);
-__NameMe__ parse(const std::string& str);
-
+    Root ParseAllStatements(std::vector<std::string_view>& statements);
+    Root parse(const std::filesystem::path& path);
+    Root parse(const std::string& str);
 
 }// namespace

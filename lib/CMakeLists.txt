@@ -1,1 +1,10 @@
-add_library(ITMLparse parser.cpp)
+add_library(ITMLparse
+        variables/IVariable.h
+        variables/BoolVariable.h
+        variables/IntVariable.h
+        variables/FloatVariable.h
+        variables/StringVariable.h
+        variables/ArrayVariable.h
+        variables/SectionVariable.h
+        variables/Root.h
+        parser.cpp)
