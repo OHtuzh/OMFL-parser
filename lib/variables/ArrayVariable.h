@@ -7,19 +7,20 @@
 class ArrayVariable : public IVariable {
  private:
     std::string name_;
-    std::vector<std::shared_ptr<IVariable>> value_;
+    std::vector<std::unique_ptr<IVariable>> value_;
+    constexpr const static IVariable empty_variable_{};
  public:
-    explicit ArrayVariable(std::vector<std::shared_ptr<IVariable>> value, std::string name = "") :
+    explicit ArrayVariable(std::vector<std::unique_ptr<IVariable>> value, std::string name = "") :
         value_(std::move(value)), name_(std::move(name)) {}
 
-    const IVariable& operator[](size_t index) const override {
+    [[nodiscard]] const IVariable& operator[](size_t index) const override {
         if (index >= value_.size()) {
-            return *(new IVariable());
+            return empty_variable_;
         }
         return *value_[index];
     }
 
-    bool IsArray() const override {
+    [[nodiscard]] bool IsArray() const override {
         return true;
     }
 };

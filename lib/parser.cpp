@@ -7,6 +7,8 @@
 #include "variables/BoolVariable.h"
 
 #include <fstream>
+#include <charconv>
+
 
 namespace omfl {
     bool IsCorrectKey(const std::string_view& key) {
@@ -16,7 +18,7 @@ namespace omfl {
         return std::all_of(key.begin(),
                            key.end(),
                            [](char c) {
-                               return isalpha(c) || isdigit(c) || c == '-' || c == '_';
+                               return isalnum(c) || c == '-' || c == '_';
                            });
     }
 
@@ -25,47 +27,51 @@ namespace omfl {
             return;
         }
         auto start = str.begin();
-        auto end = str.end() - 1;
+        auto end = str.end();
         for (; start != end && std::isspace(*start); ++start) {}
-        for (; end != start - 1 && std::isspace(*end); --end) {}
+        if (start == end) {
+            str = std::string_view(str.begin(), str.begin());
+            return;
+        }
+        for (end -= 1; end != start && std::isspace(*end); --end) {}
         str = std::string_view(start, end + 1);
-        int x;
     }
 
-    std::shared_ptr<IVariable> MakeSimpleVariable(std::string_view& source) {
+    std::unique_ptr<IVariable> MakeSimpleVariable(std::string_view& source) {
         if (source.empty()) {
             throw std::exception();
         }
         if (source == "true") {
-            return std::make_shared<BoolVariable>(BoolVariable(true));
+            return std::make_unique<BoolVariable>(BoolVariable(true));
         }
         if (source == "false") {
-            return std::make_shared<BoolVariable>(BoolVariable(false));
+            return std::make_unique<BoolVariable>(BoolVariable(false));
         }
         if (source.starts_with('"')) {
             if (!source.ends_with('"') || source.length() < 2
                 || std::find(source.begin() + 1, source.end() - 1, '"') != source.end() - 1) {
                 throw std::exception();
             }
-            return std::make_shared<StringVariable>(StringVariable(std::string(source.begin() + 1, source.end() - 1)));
+            return std::make_unique<StringVariable>(StringVariable(std::string(source.begin() + 1, source.end() - 1)));
         }
         bool positive = true;
-        if (source[0] == '+') {
+        if (source.starts_with('+')) {
             source = source.substr(1);
-        } else if (source[0] == '-') {
+        } else if (source.starts_with('-')) {
             source = source.substr(1);
             positive = false;
         }
         size_t dot_pos = source.find('.');
         if (dot_pos == std::string_view::npos) {
-            if (!std::all_of(source.begin(), source.end(), isdigit)) {
+            if (source.empty() || !std::all_of(source.begin(), source.end(), isdigit)) {
                 throw std::exception();
             }
-            std::string s(source);
+            int absolute_value;
+            std::from_chars(source.begin(), source.end(), absolute_value);
             if (positive) {
-                return std::make_shared<IntVariable>(IntVariable(std::stoi(s)));
+                return std::make_unique<IntVariable>(IntVariable(absolute_value));
             }
-            return std::make_shared<IntVariable>(IntVariable(-std::stoi(s)));
+            return std::make_unique<IntVariable>(IntVariable(-absolute_value));
         }
         size_t dot_count = std::count(source.begin(), source.end(), '.');
         if (dot_count > 1) {
@@ -82,11 +88,11 @@ namespace omfl {
         if (!std::all_of(float_part.begin(), float_part.end(), isdigit)) {
             throw std::exception();
         }
-        std::string s(source);
+        float absolute_value = std::strtof(std::string{source.begin(), source.end()}.c_str(), 0);
         if (positive) {
-            return std::make_shared<FloatVariable>(FloatVariable(std::stof(s)));
+            return std::make_unique<FloatVariable>(FloatVariable(absolute_value));
         }
-        return std::make_shared<FloatVariable>(FloatVariable(-std::stof(s)));
+        return std::make_unique<FloatVariable>(FloatVariable(-absolute_value));
     }
 
     int FindArrayEnd(const std::string_view& s, int start) {
@@ -104,8 +110,8 @@ namespace omfl {
         return -1;
     }
 
-    std::shared_ptr<ArrayVariable> MakeArray(const std::string_view& source) {
-        std::vector<std::shared_ptr<IVariable>> array;
+    std::unique_ptr<ArrayVariable> MakeArray(const std::string_view& source) {
+        std::vector<std::unique_ptr<IVariable>> array;
         int start = 0;
         for (int i = 0; i < source.length(); i++) {
             char c = source[i];
@@ -133,7 +139,7 @@ namespace omfl {
                 array.push_back(MakeSimpleVariable(value));
             }
         }
-        return std::make_shared<ArrayVariable>(ArrayVariable(std::move(array)));
+        return std::make_unique<ArrayVariable>(ArrayVariable(std::move(array)));
     }
 
     Root ParseAllStatements(std::vector<std::string_view>& statements) {
@@ -187,7 +193,7 @@ namespace omfl {
                     }
                     try {
                         bool good = section_to_insert->SetVariable(
-                            std::string(key), MakeArray(std::string_view(value.begin() + 1, value.end() - 1))
+                            key, MakeArray(std::string_view(value.begin() + 1, value.end() - 1))
                         );
                         if (!good) {
                             root.valid_ = false;
@@ -199,7 +205,7 @@ namespace omfl {
                     }
                 } else {
                     try {
-                        if (!section_to_insert->SetVariable(std::string(key), MakeSimpleVariable(value))) {
+                        if (!section_to_insert->SetVariable(key, MakeSimpleVariable(value))) {
                             root.valid_ = false;
                             return root;
                         }

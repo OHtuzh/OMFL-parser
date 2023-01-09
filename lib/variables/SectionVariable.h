@@ -10,19 +10,30 @@
 
 class SectionVariable : public IVariable {
  private:
+    struct CustomStringHasher {
+        using is_transparent = void;
+
+        std::size_t operator()(const std::string& s) const {
+            return std::hash<std::string>()(s);
+        }
+
+        std::size_t operator()(const std::string_view& sv) const {
+            return std::hash<std::string_view>()(sv);
+        }
+    };
     std::string name_;
-    std::unordered_map<std::string, std::shared_ptr<IVariable>> value_;
+    std::unordered_map<std::string, std::shared_ptr<IVariable>, CustomStringHasher, std::equal_to<>> value_;
 
  public:
-    SectionVariable(std::string name) :
+    explicit SectionVariable(std::string name) :
         IVariable(),
         name_(std::move(name)) {}
 
-    bool SetVariable(const std::string& key, std::shared_ptr<IVariable> value) {
+    bool SetVariable(const std::string_view& key, const std::shared_ptr<IVariable>& value) {
         if (value_.find(key) != value_.end()) {
             return false;
         }
-        value_[key] = value;
+        value_.insert(std::make_pair(key, value));
         return true;
     }
 
